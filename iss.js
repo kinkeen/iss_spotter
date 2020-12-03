@@ -34,11 +34,9 @@ const fetchCoordsByIP = function(fetchMyIP, callback) {
           callback(Error(msg), null);
           return;
         }else{ 
-          const CoordsByIP = {
-          "latitude":  JSON.parse(body).latitude,
-          "longitude": JSON.parse(body).longitude
-        }
-        callback(CoordsByIP);
+        
+        const { latitude, longitude } = JSON.parse(body).data;
+        callback(null, { latitude, longitude });
     }
     });
 
@@ -61,18 +59,37 @@ const fetchISSFlyOverTimes = function(coords, callback) {
         const msg = `Status Code ${response.statusCode} when fetching coordinates for IP. Response: ${body}`;
         callback(Error(msg), null);
         return;
-      }else{ 
-
-        const ISSflyovers = {
-        "risetime":  JSON.parse(body).risetime,
-        "duration": JSON.parse(body).duration
       }
-      response.push(ISSflyovers)
-      callback(response);
-  }
-  });
+     
+
+      const passes = JSON.parse(body).response;
+      callback(null, passes);
+  
+   });
 
 };
 
+const nextISSTimesForMyLocation = function(callback) {
+    fetchMyIP((error, ip) => {
+    if (error) {
+      return callback(error, null);
+    }
+
+    fetchCoordsByIP(ip, (error, loc) => {
+      if (error) {
+        return callback(error, null);
+      }
+
+      fetchISSFlyOverTimes(loc, (error, nextPasses) => {
+        if (error) {
+          return callback(error, null);
+        }
+
+        callback(null, nextPasses);
+      });
+    });
+  });
+};
+
   
-module.exports = { fetchMyIP, fetchCoordsByIP, fetchISSFlyOverTimes};
+module.exports = { fetchMyIP, fetchCoordsByIP, fetchISSFlyOverTimes, nextISSTimesForMyLocation};

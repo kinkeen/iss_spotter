@@ -45,5 +45,34 @@ const fetchCoordsByIP = function(fetchMyIP, callback) {
 };
   
 
+const fetchISSFlyOverTimes = function(coords, callback) {
+  //"response": [{"risetime": TIMESTAMP, "duration": DURATION}]
+
+  const response = [{
+    "risetime": "",
+    "duration": ""
+   }];
+
+  request('http://api.open-notify.org/iss-now.json', (error, response, body) => {
   
-module.exports = { fetchMyIP, fetchCoordsByIP };
+    if (error) return callback(error, null);
+
+      if (response.statusCode !== 200) {
+        const msg = `Status Code ${response.statusCode} when fetching coordinates for IP. Response: ${body}`;
+        callback(Error(msg), null);
+        return;
+      }else{ 
+
+        const ISSflyovers = {
+        "risetime":  JSON.parse(body).risetime,
+        "duration": JSON.parse(body).duration
+      }
+      response.push(ISSflyovers)
+      callback(response);
+  }
+  });
+
+};
+
+  
+module.exports = { fetchMyIP, fetchCoordsByIP, fetchISSFlyOverTimes};
